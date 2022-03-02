@@ -1,0 +1,2 @@
+[workspace]
+members = ["adesd", "armv8a-semihosting", "armv8a-panic-semihosting"]

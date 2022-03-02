@@ -1,0 +1,9 @@
+[submodule "adesd"]
+	path = adesd
+	url = /home/enzo/Workspace/projects/adesd/adesd
+[submodule "armv8a-semihosting"]
+	path = armv8a-semihosting
+	url = ./armv8a-semihosting/
+[submodule "armv8a-panic-semihosting"]
+	path = armv8a-panic-semihosting
+	url = ./armv8a-panic-semihosting/
