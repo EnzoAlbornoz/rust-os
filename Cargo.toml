@@ -1,2 +1,7 @@
 [workspace]
-members = ["adesd", "armv8a-semihosting", "armv8a-panic-semihosting"]
+members = ["adesd", "armv8a-semihosting", "armv8a-panic-semihosting", "my_little_kernel"]
+
+[profile.dev]
+panic = "abort"
+[profile.release]
+panic = "abort"
