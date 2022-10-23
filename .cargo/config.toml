@@ -1,0 +1,5 @@
+[build]
+target = "aarch64-unknown-none"
+
+[target.'cfg(target_arch = "aarch64")']
+runner = "qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -smp 4 -gdb tcp::1235 -S -m 1G -monitor null -serial null -semihosting-config enable=on,target=native -no-reboot -nographic -kernel"
