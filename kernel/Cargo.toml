@@ -1,0 +1,13 @@
+[package]
+name = "kernel"
+version = "0.0.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[target.'cfg(target_arch = "aarch64")'.dependencies]
+armv8a_semihosting = { version = "0.0.1" }
+armv8a_panic_semihosting = { version = "0.0.1" }
+
+[dependencies]
+paste = "1.0.9"

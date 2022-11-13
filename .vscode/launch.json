@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "custom",
+            "name": "Attach to QEMU",
+            "targetCreateCommands": [
+                "target create ${workspaceFolder}/target/aarch64-unknown-none/debug/adesd"
+            ],
+            "processCreateCommands": ["gdb-remote localhost:1235"]
+        },
+        {
+            "type": "lldb",
+            "request": "custom",
+            "name": "(MLK) Attach to QEMU",
+            "targetCreateCommands": [
+                "target create ${workspaceFolder}/target/aarch64-unknown-none/debug/my_little_kernel"
+            ],
+            "processCreateCommands": ["gdb-remote localhost:1235"]
+        }
+    ]
+}
