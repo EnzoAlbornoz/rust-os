@@ -1,128 +1,98 @@
 // Import Dependencies
-use core::arch::global_asm;
 // Define Internal Macros
-macro_rules! vector_table_handler_entry {
-    ($el_group:literal, $stack_sel:literal, $exception_type:literal) => {
+macro_rules! static_vector_table {
+    ($vector_table_name:ident) => {
+        use core::arch::{global_asm};
+        use core::cell::UnsafeCell;
+        use crate::arch::aarch64::interrupts::vector_table::VectorTable;
+        use crate::arch::aarch64::interrupts::vector_table::static_vector_table;
+        
+        extern "C" {
+            static $vector_table_name: UnsafeCell<VectorTable>;
+        }
+
+        global_asm!(
+            // Header
+            "
+                .section .kernel_vector_table
+                .balign 0x800
+                .global {0}
+                {0}:
+            ",
+            // Handlers
+
+            // Current Exception Level - Sp 0
+            static_vector_table!(handler "11"),
+            static_vector_table!(handler "12"),
+            static_vector_table!(handler "13"),
+            static_vector_table!(handler "14"),
+            // Current Exception Level - Sp N
+            static_vector_table!(handler "21"),
+            static_vector_table!(handler "22"),
+            static_vector_table!(handler "23"),
+            static_vector_table!(handler "24"),
+            // Lower Exception Level - Sp 0
+            static_vector_table!(handler "31"),
+            static_vector_table!(handler "32"),
+            static_vector_table!(handler "33"),
+            static_vector_table!(handler "34"),
+            // Lower Exception Level - Sp N
+            static_vector_table!(handler "41"),
+            static_vector_table!(handler "42"),
+            static_vector_table!(handler "43"),
+            static_vector_table!(handler "44"),
+            // Jump Address Table
+
+            // Current Exception Level - Sp 0
+            static_vector_table!(entry "11"),
+            static_vector_table!(entry "12"),
+            static_vector_table!(entry "13"),
+            static_vector_table!(entry "14"),
+            // Current Exception Level - Sp N
+            static_vector_table!(entry "21"),
+            static_vector_table!(entry "22"),
+            static_vector_table!(entry "23"),
+            static_vector_table!(entry "24"),
+            // Lower Exception Level - Sp 0
+            static_vector_table!(entry "31"),
+            static_vector_table!(entry "32"),
+            static_vector_table!(entry "33"),
+            static_vector_table!(entry "34"),
+            // Lower Exception Level - Sp N
+            static_vector_table!(entry "41"),
+            static_vector_table!(entry "42"),
+            static_vector_table!(entry "43"),
+            static_vector_table!(entry "44"),
+            // Format configurations
+            sym $vector_table_name
+        );
+    };
+
+    (handler $jat_label:literal) => {
         concat!(
-            ".balign 0x80",
-            "\n",
-            "__",
-            "vbase_handler",
-            "_",
-            $el_group,
-            "_",
-            $stack_sel,
-            "_",
-            $exception_type,
-            "__",
-            ":",
-            "\n",
-            "stp x29, x30, [sp, #-16]!",
-            "\n",
-            "ldr x30, ",
-            "__",
-            "vbase_jat",
-            "_",
-            $el_group,
-            "_",
-            $stack_sel,
-            "_",
-            $exception_type,
-            "__",
-            "\n",
-            "br x30",
-            "\n",
-            "ldp x29, x30, [sp], #16",
-            "\n",
-            "eret",
-            "\n",
+            concat!(".balign 0x80", "\n"),
+            concat!("stp x29, x30, [sp, #-16]!", "\n"),
+            concat!("ldr x30, ", $jat_label, "f", "\n"),
+            concat!("br x30", "\n"),
+            concat!("ldp x29, x30, [sp], #16", "\n"),
+            concat!("eret", "\n")
         )
     };
-}
-macro_rules! vector_table_jat_entry {
-    ($el_group:literal, $stack_sel:literal, $exception_type:literal) => {
-        concat!(
-            "__",
-            "vbase_jat",
-            "_",
-            $el_group,
-            "_",
-            $stack_sel,
-            "_",
-            $exception_type,
-            "__",
-            ": .dword 0x0"
-        )
+
+    (entry $jat_label:literal) => {
+        concat!($jat_label, ":", ".dword 0x0", "\n")
     };
+
 }
-// Define Base Vector Table
-global_asm!(
-    "
-        .section .rodata.vector_table_base
-        .balign 0x800
-        .global __vector_table_base__
-        __vector_table_base__:
-    ",
-    // Current Exception Level - Sp 0
-    vector_table_handler_entry!("ce", "sp0", "sync"),
-    vector_table_handler_entry!("ce", "sp0", "irq"),
-    vector_table_handler_entry!("ce", "sp0", "fiq"),
-    vector_table_handler_entry!("ce", "sp0", "serr"),
-    // Current Exception Level - Sp N
-    vector_table_handler_entry!("ce", "spn", "sync"),
-    vector_table_handler_entry!("ce", "spn", "irq"),
-    vector_table_handler_entry!("ce", "spn", "fiq"),
-    vector_table_handler_entry!("ce", "spn", "serr"),
-    // Lower Exception Level - Sp 0
-    vector_table_handler_entry!("le", "sp0", "sync"),
-    vector_table_handler_entry!("le", "sp0", "irq"),
-    vector_table_handler_entry!("le", "sp0", "fiq"),
-    vector_table_handler_entry!("le", "sp0", "serr"),
-    // Lower Exception Level - Sp N
-    vector_table_handler_entry!("le", "spn", "sync"),
-    vector_table_handler_entry!("le", "spn", "irq"),
-    vector_table_handler_entry!("le", "spn", "fiq"),
-    vector_table_handler_entry!("le", "spn", "serr"),
-    // Jump Address Table
-    vector_table_jat_entry!("ce", "sp0", "sync"),
-    vector_table_jat_entry!("ce", "sp0", "irq"),
-    vector_table_jat_entry!("ce", "sp0", "fiq"),
-    vector_table_jat_entry!("ce", "sp0", "serr"),
-    // Current Exception Level - Sp N
-    vector_table_jat_entry!("ce", "spn", "sync"),
-    vector_table_jat_entry!("ce", "spn", "irq"),
-    vector_table_jat_entry!("ce", "spn", "fiq"),
-    vector_table_jat_entry!("ce", "spn", "serr"),
-    // Lower Exception Level - Sp 0
-    vector_table_jat_entry!("le", "sp0", "sync"),
-    vector_table_jat_entry!("le", "sp0", "irq"),
-    vector_table_jat_entry!("le", "sp0", "fiq"),
-    vector_table_jat_entry!("le", "sp0", "serr"),
-    // Lower Exception Level - Sp N
-    vector_table_jat_entry!("le", "spn", "sync"),
-    vector_table_jat_entry!("le", "spn", "irq"),
-    vector_table_jat_entry!("le", "spn", "fiq"),
-    vector_table_jat_entry!("le", "spn", "serr"),
-);
+// Export Macros
+pub(crate) use static_vector_table;
 // Define Strucutre
 #[repr(C, align(0x800))]
 pub struct VectorTable {
     text: [u8; 0x800],
-    handlers: [u64; 16],
+    handlers: [extern "C" fn(); 16],
 }
 // Implement Vector Table
 impl VectorTable {
-    pub fn new() -> Self {
-        // Link to skeleton vector table
-        extern "C" {
-            #[link_name = "__vector_table__base__"]
-            static vector_table_base: VectorTable;
-        }
-        // Instantiate a new VT copying the instructions
-        // that jumps to the handler address
-        return Self {
-            text: unsafe { vector_table_base.text.clone() },
-            handlers: [0; 16],
-        };
-    }
+    
 }
