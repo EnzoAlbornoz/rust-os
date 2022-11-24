@@ -1,17 +1,12 @@
-// Import Dependencies
 // Define Internal Macros
+#[macro_export]
 macro_rules! static_vector_table {
-    ($vector_table_name:ident) => {
-        use core::arch::{global_asm};
-        use core::cell::UnsafeCell;
-        use crate::arch::aarch64::interrupts::vector_table::VectorTable;
-        use crate::arch::aarch64::interrupts::vector_table::static_vector_table;
-        
+    ($vector_table_name:ident) => {        
         extern "C" {
-            static $vector_table_name: UnsafeCell<VectorTable>;
+            static $vector_table_name: crate::sync::spin::Spinlock<crate::arch::aarch64::interrupts::vector_table::VectorTable>;
         }
 
-        global_asm!(
+        core::arch::global_asm!(
             // Header
             "
                 .section .kernel_vector_table
@@ -22,47 +17,49 @@ macro_rules! static_vector_table {
             // Handlers
 
             // Current Exception Level - Sp 0
-            static_vector_table!(handler "11"),
-            static_vector_table!(handler "12"),
-            static_vector_table!(handler "13"),
-            static_vector_table!(handler "14"),
+            $crate::static_vector_table!(handler "11"),
+            $crate::static_vector_table!(handler "12"),
+            $crate::static_vector_table!(handler "13"),
+            $crate::static_vector_table!(handler "14"),
             // Current Exception Level - Sp N
-            static_vector_table!(handler "21"),
-            static_vector_table!(handler "22"),
-            static_vector_table!(handler "23"),
-            static_vector_table!(handler "24"),
+            $crate::static_vector_table!(handler "21"),
+            $crate::static_vector_table!(handler "22"),
+            $crate::static_vector_table!(handler "23"),
+            $crate::static_vector_table!(handler "24"),
             // Lower Exception Level - Sp 0
-            static_vector_table!(handler "31"),
-            static_vector_table!(handler "32"),
-            static_vector_table!(handler "33"),
-            static_vector_table!(handler "34"),
+            $crate::static_vector_table!(handler "31"),
+            $crate::static_vector_table!(handler "32"),
+            $crate::static_vector_table!(handler "33"),
+            $crate::static_vector_table!(handler "34"),
             // Lower Exception Level - Sp N
-            static_vector_table!(handler "41"),
-            static_vector_table!(handler "42"),
-            static_vector_table!(handler "43"),
-            static_vector_table!(handler "44"),
+            $crate::static_vector_table!(handler "41"),
+            $crate::static_vector_table!(handler "42"),
+            $crate::static_vector_table!(handler "43"),
+            $crate::static_vector_table!(handler "44"),
             // Jump Address Table
 
             // Current Exception Level - Sp 0
-            static_vector_table!(entry "11"),
-            static_vector_table!(entry "12"),
-            static_vector_table!(entry "13"),
-            static_vector_table!(entry "14"),
+            $crate::static_vector_table!(entry "11"),
+            $crate::static_vector_table!(entry "12"),
+            $crate::static_vector_table!(entry "13"),
+            $crate::static_vector_table!(entry "14"),
             // Current Exception Level - Sp N
-            static_vector_table!(entry "21"),
-            static_vector_table!(entry "22"),
-            static_vector_table!(entry "23"),
-            static_vector_table!(entry "24"),
+            $crate::static_vector_table!(entry "21"),
+            $crate::static_vector_table!(entry "22"),
+            $crate::static_vector_table!(entry "23"),
+            $crate::static_vector_table!(entry "24"),
             // Lower Exception Level - Sp 0
-            static_vector_table!(entry "31"),
-            static_vector_table!(entry "32"),
-            static_vector_table!(entry "33"),
-            static_vector_table!(entry "34"),
+            $crate::static_vector_table!(entry "31"),
+            $crate::static_vector_table!(entry "32"),
+            $crate::static_vector_table!(entry "33"),
+            $crate::static_vector_table!(entry "34"),
             // Lower Exception Level - Sp N
-            static_vector_table!(entry "41"),
-            static_vector_table!(entry "42"),
-            static_vector_table!(entry "43"),
-            static_vector_table!(entry "44"),
+            $crate::static_vector_table!(entry "41"),
+            $crate::static_vector_table!(entry "42"),
+            $crate::static_vector_table!(entry "43"),
+            $crate::static_vector_table!(entry "44"),
+            // Spinlock AtomicBool
+            ".byte 0x0",
             // Format configurations
             sym $vector_table_name
         );

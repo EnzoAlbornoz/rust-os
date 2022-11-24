@@ -12,6 +12,7 @@
 extern crate armv8a_panic_semihosting;
 // Define Modules
 mod arch;
+mod sync;
 // mod boot;
 // mod cpu;
 // mod exception;
