@@ -7,18 +7,9 @@
         {
             "type": "lldb",
             "request": "custom",
-            "name": "Attach to QEMU",
-            "targetCreateCommands": [
-                "target create ${workspaceFolder}/target/aarch64-unknown-none/debug/adesd"
-            ],
-            "processCreateCommands": ["gdb-remote localhost:1235"]
-        },
-        {
-            "type": "lldb",
-            "request": "custom",
             "name": "(MLK) Attach to QEMU",
             "targetCreateCommands": [
-                "target create ${workspaceFolder}/target/aarch64-unknown-none/debug/my_little_kernel"
+                "target create ${workspaceFolder}/target/aarch64-unknown-none/debug/kernel"
             ],
             "processCreateCommands": ["gdb-remote localhost:1235"]
         }
