@@ -1,4 +1,4 @@
-// Declare Crate Attributes
+// Declare crate attributes
 #![no_std]
 #![no_main]
 #![feature(naked_functions)]
@@ -8,15 +8,17 @@
 #![feature(strict_provenance)]
 #![feature(fn_align)]
 #![feature(const_mut_refs)]
-// Load Panic Package
+#![feature(slice_from_ptr_range)]
+// Load panic package
 extern crate armv8a_panic_semihosting;
-// Define Modules
+// Define modules
 mod arch;
 mod sync;
 // mod boot;
 // mod cpu;
 // mod exception;
-// Define Kernel Init
+
+// Define kernel init
 unsafe fn main() -> ! {
     loop {}
 }
