@@ -1,7 +1,7 @@
 // Import dependencies
 use core::{arch::asm, slice, ptr};
 
-use super::cpu::park_non_main_cores;
+use super::{cpu::park_non_main_cores, interrupts::{self, setup_interrupts}};
 // Link with global labels
 extern "C" {
     #[link_name = "__boot_stacks_start__"]
@@ -68,6 +68,8 @@ unsafe fn start() -> ! {
     // Initialize BSS
     clear_bss();
     // Setup Interruptions
+    setup_interrupts();
+    // Loop
     loop {}
 }
 

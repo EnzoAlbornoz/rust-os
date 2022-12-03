@@ -1,3 +1,5 @@
+// Import dependencies
+use enum_iterator::all;
 // Define internal macros
 #[macro_export]
 macro_rules! static_vector_table {
@@ -72,8 +74,12 @@ macro_rules! static_vector_table {
             concat!("stp x29, x30, [sp, #-16]!", "\n"),
             concat!("ldr x30, ", $jat_label, "f", "\n"),
             concat!("br x30", "\n"),
-            concat!("ldp x29, x30, [sp], #16", "\n"),
-            concat!("eret", "\n")
+
+            // Exception return should be inserted at the end of
+            // every interrupt handler (handled by the proc macro)
+
+            // concat!("ldp x30, x30, [sp], #16", "\n"),
+            // concat!("eret", "\n")
         )
     };
 
@@ -83,21 +89,89 @@ macro_rules! static_vector_table {
 
 }
 
+#[macro_export]
+macro_rules! exception_handler {
+    ($handler:ident) => {
+        {
+            paste::paste! {
+                #[naked]
+                unsafe extern "C" fn [< __asm_eh_ $handler >]() -> ! {
+                    asm!(
+                        // Restore x29 and x30
+                        "ldp x29, x30, [sp], #16",
+                        // Persist Context
+                        $crate::arch::aarch64::cpu::context::asm_push_context!(true),
+                        // Call handler with context as argument
+                        "mov x0, sp",
+                        "bl {handler}",
+                        $crate::arch::aarch64::cpu::context::asm_pop_context!(true),
+                        "eret",
+                        handler = sym $handler,
+                        options(noreturn)
+                    );
+                }
+                // Return reference to the actual handler
+                [< __asm_eh_ $handler >]
+            }
+        }
+    };
+}
 
-
+use enum_iterator::Sequence;
 // Export macros
 pub(crate) use static_vector_table;
+pub(crate) use exception_handler;
 // Define strucutres
 #[repr(C, align(0x800))]
 pub struct VectorTable {
     text: [u8; 0x800],
-    handlers: [extern "C" fn(); 16],
+    handlers: [unsafe extern "C" fn() -> !; 16],
 }
 
-pub struct ExceptionHandler();
+#[repr(usize)]
+#[derive(Clone, Copy, Sequence)]
+pub enum ExceptionRelativeLevel {
+    Current = 0,
+    Lower   = 8
+}
+
+#[repr(usize)]
+#[derive(Clone, Copy, Sequence)]
+pub enum ExceptionKind {
+    Sync = 0,
+    Irq  = 1,
+    Fiq  = 2,
+    Serr = 3
+}
+
+#[repr(usize)]
+#[derive(Clone, Copy, Sequence)]
+pub enum ExceptionStack {
+    Sp0 = 0,
+    SpN = 4
+}
 // Implement vector table
 impl VectorTable {
-    // pub fn set_handler() {
-        
-    // }
+    pub fn set_default_handler(&mut self, handler: unsafe extern "C" fn() -> !) {
+        for rel_level in all::<ExceptionRelativeLevel>() {
+            for stack_sel in all::<ExceptionStack>() {
+                for exception_kind in all::<ExceptionKind>() {
+                    self.set_handler(rel_level, stack_sel, exception_kind, handler);
+                }
+            }
+        }
+    }
+
+    pub fn set_kind_handler(&mut self, kind: ExceptionKind, handler: unsafe extern "C" fn() -> !) {
+        for rel_level in all::<ExceptionRelativeLevel>() {
+            for stack_sel in all::<ExceptionStack>() {
+                self.set_handler(rel_level, stack_sel, kind, handler);
+            }
+        }
+    }
+    
+    pub fn set_handler(&mut self, level: ExceptionRelativeLevel, stack: ExceptionStack, kind: ExceptionKind, handler: unsafe extern "C" fn() -> !) {
+        let index = level as usize + stack as usize + kind as usize;
+        self.handlers[index] = handler;
+    }
 }
